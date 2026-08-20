@@ -65,9 +65,17 @@ class DiocesesInBBox extends Ajax {
         // Mert ugyan itt is van cache, de minden térképmozdulatnál történik valami
         $overpass = new \ExternalApi\OverpassApi();
         /*
-         * #842: LÁTOGATÓI kérésben vagyunk, nem cronban. Az alapértelmezett 30 másodperc
-         * itt azt jelenti, hogy egy akadozó Overpass fél percre megállítja a térképet.
-         * Az egyházmegye-réteg kiegészítés: ha nem jön meg, inkább ne jöjjön meg gyorsan.
+         * #842: LÁTOGATÓI kérésben vagyunk, nem cronban.
+         *
+         * A hívás ASYNC ajax, tehát a 30 másodperces korlát nem fagyasztotta be a
+         * térképet — a réteg egyszerűen jóval később jött meg (borazslo pontosítása).
+         * Az viszont így is fölösleges: az egyházmegye-réteg KIEGÉSZÍTÉS, és egy fél
+         * perccel későbbi válasz senkinek nem jó. Aki addig továbbmozgatta a térképet,
+         * annak a válasz már nem is arról a területről szól.
+         *
+         * A rövidebb korlát ezért nem a látogató „megmentése", hanem takarékosság: az
+         * elhaló kérés hamarabb enged fel egy kapcsolatot, és a kliens hamarabb próbálhat
+         * újra egy valóban aktuális területtel.
          */
         $overpass->queryTimeout = 15;
         $filter = "['type'='boundary']['boundary'='religious_administration']['religion'='christian']['denomination'='".$rite."']['admin_level'='6']";
